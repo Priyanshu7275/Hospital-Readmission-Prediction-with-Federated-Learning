@@ -29,7 +29,8 @@ function ageBand(age: number | null | undefined): string {
   return `${lo}-${lo + 9}`;
 }
 
-// Turn a raw backend row into the exact shape the UI expects.
+// Turn a raw backend row into the exact shape the UI expects, so no field
+// is ever undefined (which used to crash the search box and gauges).
 function normalizePatient(p: any): PatientSummary {
   return {
     patient_id: String(p.patient_id),
