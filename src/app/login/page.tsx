@@ -217,6 +217,11 @@ export default function LoginPage() {
                 subtitle="We sent a 6-digit code to your registered device."
               >
                 <OtpInput value={otp} onChange={setOtp} onComplete={submitOtp} />
+                 {showOtpHint && (
+                  <p className="mt-3 text-center text-xs text-ink-400">
+                    Demo passcode: {DEMO_CREDENTIALS.otp}
+                  </p>
+                )}
                 <SubmitButton busy={busy} onClick={submitOtp} label="Verify and sign in" />
               </StepShell>
             )}
@@ -233,6 +238,12 @@ export default function LoginPage() {
             Access is restricted, encrypted, and audited
           </div>
         </div>
+        {/* Demo hint — remove before real deployment */}
+        <p className="mt-4 text-center text-xs leading-relaxed text-white/70">
+          Demo access — code {DEMO_CREDENTIALS.hospitalCode} ·{" "}
+          {DEMO_CREDENTIALS.email} / {DEMO_CREDENTIALS.password} · OTP{" "}
+          {DEMO_CREDENTIALS.otp}
+        </p>
       </motion.div>
     </main>
   );

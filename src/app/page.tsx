@@ -126,7 +126,6 @@ export default function LandingPage() {
                 style={{ aspectRatio: "704 / 478" }}
               >
                 <SeagullGuide
-                  tip="Log in to view the patient cohort →"
                   fillParent
                 />
               </div>

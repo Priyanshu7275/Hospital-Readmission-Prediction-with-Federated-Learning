@@ -21,12 +21,7 @@ export function Navbar() {
           <nav className="flex items-center gap-2">
             {isAuthed ? (
               <>
-                <Link
-                  href="/patients"
-                  className="hidden rounded-full px-4 py-2 text-sm font-medium text-ink-700 transition hover:bg-ink-900/5 sm:inline-block"
-                >
-                  Patient cohort
-                </Link>
+
                 <span className="hidden text-sm text-ink-500 md:inline">
                   {email}
                 </span>

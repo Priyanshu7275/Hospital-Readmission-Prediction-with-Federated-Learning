@@ -81,7 +81,6 @@ export default function PatientsPage() {
               style={{ width: 220, aspectRatio: "704 / 478" }}
             >
               <SeagullGuide
-                tip="Select a patient to see why →"
                 fillParent
               />
             </div>
