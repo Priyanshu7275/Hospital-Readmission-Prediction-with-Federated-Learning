@@ -14,10 +14,6 @@ import {
   signOut as cognitoSignOut,
 } from "aws-amplify/auth";
 
-// ── Cognito / Amplify configuration ─────────────────────────────────
-// Reads the two values from Vercel env vars (Project Settings → Env Vars):
-//   NEXT_PUBLIC_COGNITO_USER_POOL_ID
-//   NEXT_PUBLIC_COGNITO_CLIENT_ID
 Amplify.configure({
   Auth: {
     Cognito: {
@@ -27,9 +23,6 @@ Amplify.configure({
   },
 });
 
-// ── Demo gate (safe, public). Real clinicians go through Cognito. ───
-//   - "demo"  → entered the built-in demo values → app shows DEMO data.
-//   - "live"  → validated by Cognito → app shows REAL backend data.
 const DEMO_HOSPITAL_CODE = "HX-7729";
 const DEMO_EMAIL = "clinician@hospital-x.org";
 const DEMO_PASSWORD = "sammy-demo";
@@ -58,7 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<SessionMode | null>(null);
   const [ready, setReady] = useState(false);
 
-  // transient state held between steps (not persisted)
   const [pendingHospital, setPendingHospital] = useState<string | null>(null);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [pendingMode, setPendingMode] = useState<SessionMode>("demo");
@@ -82,7 +74,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setReady(true);
   }, []);
 
-  // STEP 1 — hospital enrollment gate (frontend only)
   const verifyHospital = async (code: string) => {
     await new Promise((r) => setTimeout(r, 300));
     const trimmed = code.trim().toUpperCase();
@@ -93,13 +84,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return false;
   };
 
-  // STEP 2 — credentials.
-  //   Demo creds  → demo mode (fixed OTP 424242).
-  //   Anything else → real Cognito sign-in, which emails a one-time code.
   const verifyCredentials = async (e: string, p: string) => {
     const emailNorm = e.trim().toLowerCase();
 
-    // Demo path (safe public data)
     if (emailNorm === DEMO_EMAIL && p === DEMO_PASSWORD) {
       await new Promise((r) => setTimeout(r, 300));
       setPendingEmail(e.trim());
@@ -107,9 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return true;
     }
 
-    // Live path → real Cognito sign-in (triggers the email OTP)
     try {
-      // clear any lingering session so signIn doesn't throw "already signed in"
       try {
         await cognitoSignOut();
       } catch {
@@ -134,9 +119,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // STEP 3 — OTP.
-  //   Demo → fixed code 424242.
-  //   Live → confirm the email OTP with Cognito.
   const verifyOtp = async (code: string) => {
     let ok = false;
 
@@ -214,8 +196,6 @@ export function useAuth() {
   return ctx;
 }
 
-// Read the current session mode from storage (for use outside React, e.g. the
-// data layer). Returns "demo" when nothing is stored.
 export function getSessionMode(): SessionMode {
   if (typeof window === "undefined") return "demo";
   try {
