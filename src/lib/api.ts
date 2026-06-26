@@ -7,15 +7,8 @@ import { DEMO_PATIENTS, demoPrediction } from "./demo-data";
 import { getSessionMode } from "./auth";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "";
-
 const TIMEOUT_MS = 6000;
 
-// Real data is used ONLY when BOTH are true:
-//   1. NEXT_PUBLIC_API_URL is set (a backend exists), AND
-//   2. the session was tagged "live" (real credentials, not demo).
-// In every other case the app returns demo data — so demo logins always see
-// demo data even on a deployed site with the backend connected, and an empty
-// API URL means everyone sees demo data.
 function useLiveData(): boolean {
   return Boolean(BASE) && getSessionMode() === "live";
 }
@@ -24,37 +17,48 @@ async function fetchWithTimeout(url: string, init?: RequestInit) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    const res = await fetch(url, { ...init, signal: controller.signal });
-    return res;
+    return await fetch(url, { ...init, signal: controller.signal });
   } finally {
     clearTimeout(timer);
   }
 }
 
-/**
- * Fetch the patient cohort.
- * Demo session (or no backend) → demo data. Live session → real Aurora data,
- * with a silent fallback to demo data if the backend is unreachable.
- */
+function ageBand(age: number | null | undefined): string {
+  if (age == null || isNaN(Number(age))) return "Unknown";
+  const lo = Math.floor(Number(age) / 10) * 10;
+  return `${lo}-${lo + 9}`;
+}
+
+// Turn a raw backend row into the exact shape the UI expects.
+function normalizePatient(p: any): PatientSummary {
+  return {
+    patient_id: String(p.patient_id),
+    external_ref: p.external_ref ?? `HX-${p.patient_id}`,
+    age_band: p.age_band ?? ageBand(p.age),
+    primary_diagnosis: p.primary_diagnosis ?? p.admission_type ?? "—",
+    probability: Number(p.probability) || 0,
+    risk_tier: p.risk_tier,
+  };
+}
+
 export async function getPatients(): Promise<PatientSummary[]> {
   if (!useLiveData()) return DEMO_PATIENTS;
   try {
     const res = await fetchWithTimeout(`${BASE}/patients`);
     if (!res.ok) throw new Error(`patients ${res.status}`);
-    const data = (await res.json()) as PatientSummary[];
-    const scored = Array.isArray(data)
-      ? data.filter((p) => p.probability != null && p.risk_tier != null)
+    const raw = (await res.json()) as any[];
+    const data = Array.isArray(raw)
+      ? raw
+          .filter((p) => p.probability != null && p.risk_tier != null)
+          .map(normalizePatient)
       : [];
-    if (scored.length === 0) return DEMO_PATIENTS;
-    return scored;
+    if (data.length === 0) return DEMO_PATIENTS;
+    return data;
   } catch {
     return DEMO_PATIENTS;
   }
 }
 
-/**
- * Fetch a single prediction with SHAP factors.
- */
 export async function getPrediction(patientId: string): Promise<Prediction> {
   if (!useLiveData()) return demoPrediction(patientId);
   try {
@@ -70,10 +74,6 @@ export async function getPrediction(patientId: string): Promise<Prediction> {
   }
 }
 
-/**
- * Submit clinician feedback (confirm / override).
- * In demo mode this resolves true without a network call.
- */
 export async function sendFeedback(payload: FeedbackPayload): Promise<boolean> {
   if (!useLiveData()) return true;
   try {
