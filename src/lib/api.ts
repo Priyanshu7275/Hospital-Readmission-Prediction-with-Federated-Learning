@@ -42,8 +42,11 @@ export async function getPatients(): Promise<PatientSummary[]> {
     const res = await fetchWithTimeout(`${BASE}/patients`);
     if (!res.ok) throw new Error(`patients ${res.status}`);
     const data = (await res.json()) as PatientSummary[];
-    if (!Array.isArray(data) || data.length === 0) return DEMO_PATIENTS;
-    return data;
+    const scored = Array.isArray(data)
+      ? data.filter((p) => p.probability != null && p.risk_tier != null)
+      : [];
+    if (scored.length === 0) return DEMO_PATIENTS;
+    return scored;
   } catch {
     return DEMO_PATIENTS;
   }
