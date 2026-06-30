@@ -71,7 +71,7 @@ export const DEMO_PATIENTS: PatientSummary[] = Array.from(
       risk_tier: tierFor(probability),
     };
   }
-).sort((a, b) => b.probability - a.probability);
+).sort((a, b) => a.patient_id.localeCompare(b.patient_id));
 
 export function demoPrediction(patientId: string): Prediction {
   const patient =
