@@ -1,3 +1,5 @@
+"""Federated client = one hospital node. Trains a local XGBoost model on its own
+data shard and sends only the model (never data) to the central server."""
 import flwr as fl
 import argparse
 import sys
