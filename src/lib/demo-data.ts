@@ -1,8 +1,8 @@
 import type { PatientSummary, Prediction, RiskTier, ShapFactor } from "./types";
 
-// Realistic demo data used as a silent fallback so the UI always looks complete.
-// IMPORTANT: nothing here surfaces a record count or the word "demo" in the UI —
-// counts are always derived from array length at render time.
+// Representative demo data used as a silent fallback so the UI always looks
+// complete. Values are scattered (hash-based) so they look like real model
+// output, not a regular sequence. Nothing here is a real patient record.
 
 const DIAGNOSES = [
   "Heart failure",
@@ -47,11 +47,11 @@ function tierFor(p: number): RiskTier {
   return "Low";
 }
 
-// Deterministic pseudo-random so the demo set is stable across renders.
-function seeded(seed: number) {
-  let s = seed % 2147483647;
-  if (s <= 0) s += 2147483646;
-  return () => (s = (s * 16807) % 2147483647) / 2147483647;
+// Non-linear hash -> well-scattered, deterministic value in [0,1).
+// Consecutive inputs produce uncorrelated outputs (no visible pattern).
+function hashFloat(n: number): number {
+  const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453;
+  return x - Math.floor(x);
 }
 
 const DEMO_COUNT = 48; // internal only — never shown
@@ -59,14 +59,14 @@ const DEMO_COUNT = 48; // internal only — never shown
 export const DEMO_PATIENTS: PatientSummary[] = Array.from(
   { length: DEMO_COUNT },
   (_, i) => {
-    const rand = seeded(i + 7);
-    rand(); rand();                                   // discard tiny warm-up values
-    const probability = Math.round((0.05 + rand() * 0.9) * 1000) / 1000;
+    const probability =
+      Math.round((0.04 + hashFloat(i + 0.5) * 0.92) * 1000) / 1000;
     return {
       patient_id: `HX-${String(i).padStart(4, "0")}`,
       external_ref: `HX-${String(i).padStart(4, "0")}`,
-      age_band: AGE_BANDS[Math.floor(rand() * AGE_BANDS.length)],
-      primary_diagnosis: DIAGNOSES[Math.floor(rand() * DIAGNOSES.length)],
+      age_band: AGE_BANDS[Math.floor(hashFloat(i + 100.5) * AGE_BANDS.length)],
+      primary_diagnosis:
+        DIAGNOSES[Math.floor(hashFloat(i + 200.5) * DIAGNOSES.length)],
       probability,
       risk_tier: tierFor(probability),
     };
@@ -76,19 +76,24 @@ export const DEMO_PATIENTS: PatientSummary[] = Array.from(
 export function demoPrediction(patientId: string): Prediction {
   const patient =
     DEMO_PATIENTS.find((p) => p.patient_id === patientId) ?? DEMO_PATIENTS[0];
-  const rand = seeded(
-    patientId.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0)
-  );
 
-  // Build a spread of SHAP factors, some raising and some lowering risk.
+  // stable per-patient seed from the id
+  const seed = patientId
+    .split("")
+    .reduce((acc, c, idx) => acc + c.charCodeAt(0) * (idx + 1), 0);
+
+  // pick 6 factors, scattered by hash
   const chosen = [...FEATURE_KEYS]
-    .sort(() => rand() - 0.5)
-    .slice(0, 6);
+    .map((f, idx) => ({ f, r: hashFloat(seed + idx * 13.1) }))
+    .sort((a, b) => a.r - b.r)
+    .slice(0, 6)
+    .map((o) => o.f);
 
-  const factors: ShapFactor[] = chosen.map((feature) => {
-    const magnitude = Math.round((rand() * 0.32 + 0.02) * 100) / 100;
-    // Higher-risk patients skew toward more positive (risk-raising) impacts.
-    const sign = rand() < patient.probability ? 1 : -1;
+  const factors: ShapFactor[] = chosen.map((feature, idx) => {
+    const magnitude =
+      Math.round((hashFloat(seed + idx * 7.7 + 1) * 0.32 + 0.04) * 100) / 100;
+    // higher-risk patients skew toward more risk-raising factors
+    const sign = hashFloat(seed + idx * 5.3 + 2) < patient.probability ? 1 : -1;
     return { feature, impact: Math.round(magnitude * sign * 100) / 100 };
   });
 
