@@ -1,3 +1,5 @@
+"""Reads global_model.json + metadata and INSERTs the model into Aurora's
+model_store table (run on EC2 #1 after training)."""
 import psycopg2
 import json
 import os
