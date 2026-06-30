@@ -1,3 +1,4 @@
+"""Creates the model_store table in Aurora (BYTEA model bytes + JSONB metadata)."""
 import psycopg2
 import os
 conn = psycopg2.connect(
