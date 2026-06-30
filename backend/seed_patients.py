@@ -1,3 +1,4 @@
+"""Runs schema.sql against Aurora to create all tables (first-time DB setup)."""
 import psycopg2
 import json
 import pandas as pd
