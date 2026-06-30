@@ -1,3 +1,5 @@
+"""Evaluates the trained model — ROC-AUC, recall, Cohen's Kappa, threshold tuning —
+to sanity-check it before deployment."""
 from federated_nodes import FederatedDataSimulator
 from model import HospitalReadmissionModel
 
