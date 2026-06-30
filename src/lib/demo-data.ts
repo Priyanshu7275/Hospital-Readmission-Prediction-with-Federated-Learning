@@ -60,7 +60,8 @@ export const DEMO_PATIENTS: PatientSummary[] = Array.from(
   { length: DEMO_COUNT },
   (_, i) => {
     const rand = seeded(i + 7);
-    const probability = Math.round(rand() * 1000) / 1000;
+    rand(); rand();                                   // discard tiny warm-up values
+    const probability = Math.round((0.05 + rand() * 0.9) * 1000) / 1000;
     return {
       patient_id: `HX-${String(i).padStart(4, "0")}`,
       external_ref: `HX-${String(i).padStart(4, "0")}`,
