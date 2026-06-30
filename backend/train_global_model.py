@@ -1,3 +1,4 @@
+"""Orchestrates a full federated training run end-to-end, producing global_model.json."""
 from model import HospitalReadmissionModel
 import pandas as pd
 import json
