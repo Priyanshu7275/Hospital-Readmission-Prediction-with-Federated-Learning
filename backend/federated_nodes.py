@@ -1,3 +1,5 @@
+"""Splits the master dataset into 3 simulated hospitals (50/30/20, stratified),
+giving each federated client its own private training/test set."""
 import pandas as pd
 import os
 from sklearn.model_selection import train_test_split
