@@ -1,3 +1,5 @@
+"""FastAPI inference server. Loads the trained model FROM Aurora (model_store),
+serves /patients, /predict/{id} (with SHAP), and /feedback. Runs on EC2 #2."""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
