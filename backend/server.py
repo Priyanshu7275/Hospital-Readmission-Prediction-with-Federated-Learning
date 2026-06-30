@@ -1,3 +1,5 @@
+"""Federated aggregation server (Flower). Receives each hospital's XGBoost model
+and combines them by bagging (merging trees) into one global model on EC2 #1."""
 import flwr as fl
 import xgboost as xgb
 import numpy as np
