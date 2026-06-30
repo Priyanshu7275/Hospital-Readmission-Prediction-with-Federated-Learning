@@ -1,3 +1,5 @@
+"""HospitalReadmissionModel: the XGBoost model class — local training,
+JSON weight (de)serialization, SHAP explanations, and Kappa threshold tuning."""
 import numpy as np 
 import xgboost as xgb
 from sklearn.metrics import accuracy_score,recall_score,roc_auc_score,cohen_kappa_score
